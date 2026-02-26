@@ -18,35 +18,36 @@ export function LocationFilterPanel({ value, onChange, onSearch }: LocationFilte
   }
 
   return (
-    <section className="panel">
+    <>
       <h2>Find concerts near you</h2>
-      <label>
-        Location
-        <input
-          aria-label="Location"
-          value={value.locationQuery}
-          onChange={(event) => onChange({ ...value, locationQuery: event.target.value })}
-          placeholder="City, ZIP, or address"
-        />
-      </label>
-      <label>
+      <p className="subtle">Set location and timeframe, then run search. You can refine after results.</p>
+      <label htmlFor="location-input">Location</label>
+      <input
+        id="location-input"
+        aria-label="Location"
+        value={value.locationQuery}
+        onChange={(event) => onChange({ ...value, locationQuery: event.target.value })}
+        placeholder="City, ZIP, or address"
+      />
+
+      <label htmlFor="radius-input">
         Radius: {value.radius} {value.radiusUnit}
-        <input
-          type="range"
-          min={10}
-          max={100}
-          value={value.radius}
-          onChange={(event) => onChange({ ...value, radius: Number(event.target.value) })}
-        />
       </label>
+      <input
+        id="radius-input"
+        type="range"
+        min={10}
+        max={100}
+        value={value.radius}
+        onChange={(event) => onChange({ ...value, radius: Number(event.target.value) })}
+      />
+
       <button
         type="button"
         className="action secondary"
-        onClick={() =>
-          onChange({ ...value, radiusUnit: value.radiusUnit === 'mi' ? 'km' : 'mi' })
-        }
+        onClick={() => onChange({ ...value, radiusUnit: value.radiusUnit === 'mi' ? 'km' : 'mi' })}
       >
-        Toggle {value.radiusUnit === 'mi' ? 'km' : 'mi'}
+        Switch distance unit to {value.radiusUnit === 'mi' ? 'km' : 'mi'}
       </button>
       <div className="preset-row">
         <button type="button" onClick={() => setPreset(7)}>
@@ -62,6 +63,6 @@ export function LocationFilterPanel({ value, onChange, onSearch }: LocationFilte
       <button className="action" type="button" disabled={!value.locationQuery.trim()} onClick={onSearch}>
         Search concerts
       </button>
-    </section>
+    </>
   )
 }

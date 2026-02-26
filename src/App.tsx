@@ -16,6 +16,7 @@ function App() {
   const [visibleCount, setVisibleCount] = useState(10)
   const [statusMessage, setStatusMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [hasSearched, setHasSearched] = useState(false)
   const gateway = useMemo(() => createDiscoveryGateway(), [])
 
   const discoverConcerts = async () => {
@@ -24,7 +25,10 @@ function App() {
       return
     }
 
+    setVisibleCount(10)
+    setHasSearched(true)
     setIsLoading(true)
+
     const recognition = await gateway.resolveRecognition(seedInput)
     const { events: discoveredEvents, providersAttempted, winner } = await gateway.resolveEvents({
       recognition,
@@ -38,6 +42,9 @@ function App() {
 
   const visibleEvents = useMemo(() => events.slice(0, visibleCount), [events, visibleCount])
 
+  const canShowFilters = Boolean(seedInput)
+  const canShowResults = hasSearched
+
   return (
     <>
       <header className="app-header">
@@ -47,27 +54,78 @@ function App() {
 
       <main className="layout">
         <div>
-          <HomeInputPanel onManualSubmit={setSeedInput} onOfflineSaved={setStatusMessage} />
-          <LocationFilterPanel value={filters} onChange={setFilters} onSearch={discoverConcerts} />
-        </div>
-        <div>
           <section className="panel">
-            <h3>Query summary</h3>
+            <p className="step-label">Step 1</p>
+            <HomeInputPanel onManualSubmit={setSeedInput} onOfflineSaved={setStatusMessage} />
+          </section>
+
+          {canShowFilters && (
+            <section className="panel">
+              <p className="step-label">Step 2</p>
+              <LocationFilterPanel value={filters} onChange={setFilters} onSearch={discoverConcerts} />
+            </section>
+          )}
+
+          <details className="panel details-panel">
+            <summary>Search details</summary>
             <p>Seed: {seedInput ? `${seedInput.mode}: ${seedInput.query}` : 'None yet'}</p>
             <p>
               Area: {filters.locationQuery || 'Unset'} · {filters.radius} {filters.radiusUnit}
             </p>
-            <p>Window: {filters.startDate} to {filters.endDate}</p>
-            <p>Audio provider: {providerSelection.audioRecognitionPrimary} (fallback {providerSelection.audioRecognitionFallback})</p>
-            <p>Event providers: {providerSelection.eventsPrimary} → {providerSelection.eventsSecondary}; niche source: {providerSelection.nicheSources.join(', ')}</p>
+            <p>
+              Window: {filters.startDate} to {filters.endDate}
+            </p>
+            <p>
+              Audio provider: {providerSelection.audioRecognitionPrimary} (fallback {providerSelection.audioRecognitionFallback})
+            </p>
+            <p>
+              Event providers: {providerSelection.eventsPrimary} → {providerSelection.eventsSecondary}; niche source:{' '}
+              {providerSelection.nicheSources.join(', ')}
+            </p>
             <p>Outbound tracking: {providerSelection.outboundTrackingStatus}</p>
-            {statusMessage && <p className="status">{statusMessage}</p>}
-          </section>
-          <ResultsSection
-            events={visibleEvents}
-            isLoading={isLoading}
-            onLoadMore={() => setVisibleCount((count) => count + 10)}
-          />
+            {statusMessage && (
+              <p className="status" aria-live="polite">
+                {statusMessage}
+              </p>
+            )}
+          </details>
+        </div>
+
+        <div>
+          {canShowResults ? (
+            <section className="panel">
+              <p className="step-label">Step 3</p>
+              <ResultsSection
+                events={visibleEvents}
+                isLoading={isLoading}
+                hasSearched={hasSearched}
+                totalEvents={events.length}
+                onLoadMore={() => setVisibleCount((count) => count + 10)}
+                onBroadenRadius={() =>
+                  setFilters((previous) => ({
+                    ...previous,
+                    radius: Math.min(100, Math.round(previous.radius * 1.5)),
+                  }))
+                }
+                onExtendWindow={() =>
+                  setFilters((previous) => {
+                    const end = new Date(previous.endDate)
+                    end.setDate(end.getDate() + 30)
+                    return {
+                      ...previous,
+                      endDate: end.toISOString().slice(0, 10),
+                    }
+                  })
+                }
+              />
+            </section>
+          ) : (
+            <section className="panel">
+              <p className="step-label">Step 3</p>
+              <h2>See your recommendations</h2>
+              <p className="subtle">Add a song and your location, then run a search to view matches.</p>
+            </section>
+          )}
         </div>
       </main>
     </>
