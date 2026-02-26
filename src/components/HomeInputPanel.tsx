@@ -68,24 +68,32 @@ export function HomeInputPanel({ onManualSubmit, onOfflineSaved }: HomeInputPane
   }
 
   return (
-    <section className="panel">
+    <>
       <h2>Identify a song</h2>
-      <p className="subtle">Hear a banger? Find it live.</p>
+      <p className="subtle">Hear a track you like? Start with recording or type artist/title.</p>
       <button className="action" onClick={startRecording} type="button">
-        Record Song (10s)
+        Record song (10s)
       </button>
       <div className="input-row">
+        <label className="field" htmlFor="seed-input">
+          Song, artist, or genre
+        </label>
         <input
+          id="seed-input"
           aria-label="Song, artist, or genre"
           placeholder="Song, artist, or genre"
           value={manualInput}
           onChange={(event) => setManualInput(event.target.value)}
         />
         <button className="action secondary" type="button" onClick={submitManual}>
-          Use Text
+          Use text
         </button>
       </div>
-      {recordingState && <p className="status">{recordingState}</p>}
-    </section>
+      {recordingState && (
+        <p className="status" aria-live="polite">
+          {recordingState}
+        </p>
+      )}
+    </>
   )
 }
